@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media 3: Titik Pojok</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f6f9; display: flex; justify-content: center; padding: 20px; }
+        .container { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; gap: 20px; max-width: 900px; width: 100%; }
+        canvas { border: 1px solid #ddd; border-radius: 8px; background-color: #fafafa; }
+        .controls { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        button { background-color: #fff; border: 1px solid #ccc; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; text-align: left; }
+        button.active { background-color: #f3e5f5; border-color: #9b59b6; }
+        .note { font-size: 13px; color: #666; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div><canvas id="canvas" width="450" height="450"></canvas></div>
+        <div class="controls">
+            <h3>Media 3: Menentukan Titik Pojok</h3>
+            <p style="font-size:14px; color:#555;">Daerah Penyelesaian (DP) telah ditemukan. Identifikasi titik-titik pembatasnya.</p>
+            
+            <div style="border-left: 5px solid #9b59b6; padding-left: 10px;">
+                <button onclick="toggle('tA', this)">1. Titik Pojok A</button>
+                <div class="note">Perpotongan Garis Pendapatan dengan Sumbu Y.</div>
+            </div>
+            
+            <div style="border-left: 5px solid #9b59b6; padding-left: 10px;">
+                <button onclick="toggle('tB', this)">2. Titik Pojok B (Eliminasi)</button>
+                <div class="note">Perpotongan Garis Kapasitas & Pendapatan.</div>
+            </div>
+
+            <div style="border-left: 5px solid #9b59b6; padding-left: 10px;">
+                <button onclick="toggle('tC', this)">3. Titik Pojok C</button>
+                <div class="note">Perpotongan Garis Kapasitas dengan Sumbu Y.</div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const ctx = document.getElementById('canvas').getContext('2d');
+        const padding = 40, max = 30, w = 450, h = 450;
+        let state = { tA: false, tB: false, tC: false };
+
+        function getX(x) { return padding + (x * ((w - padding * 2) / max)); }
+        function getY(y) { return h - padding - (y * ((h - padding * 2) / max)); }
+
+        function drawGrid() {
+            ctx.clearRect(0, 0, w, h);
+            ctx.strokeStyle = '#e0e0e0'; ctx.lineWidth = 1; ctx.font = '10px Arial'; ctx.fillStyle = '#7f8c8d';
+            
+            // Menggambar garis kotak-kotak dan angka skala
+            for (let i = 0; i <= max; i += 2) {
+                ctx.beginPath(); ctx.moveTo(getX(i), padding); ctx.lineTo(getX(i), h - padding); ctx.stroke();
+                if (i !== 0) ctx.fillText(i, getX(i) - 6, h - padding + 15); // Angka sumbu X
+                
+                ctx.beginPath(); ctx.moveTo(padding, getY(i)); ctx.lineTo(w - padding, getY(i)); ctx.stroke();
+                if (i !== 0) ctx.fillText(i, padding - 22, getY(i) + 4); // Angka sumbu Y
+            }
+            
+            // Menggambar sumbu utama
+            ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 2; ctx.beginPath();
+            ctx.moveTo(padding, padding); ctx.lineTo(padding, h - padding); ctx.lineTo(w - padding, h - padding); ctx.stroke();
+            
+            // Label sumbu x dan y
+            ctx.fillStyle = '#2c3e50'; ctx.font = 'bold 12px Arial';
+            ctx.fillText("Es Teh (x)", w - padding - 30, h - padding + 30); 
+            ctx.fillText("Boba (y)", padding - 35, padding - 10);
+        }
+
+        function drawLine(x1, y1, x2, y2, color, label, lx, ly) {
+            ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.beginPath();
+            let yStart = y1 + (0 - x1) * (y2 - y1) / (x2 - x1);
+            let yEnd = y1 + (max - x1) * (y2 - y1) / (x2 - x1);
+            ctx.moveTo(getX(0), getY(yStart)); ctx.lineTo(getX(max), getY(yEnd)); ctx.stroke();
+            ctx.fillStyle = color; ctx.font = 'bold 14px Arial'; ctx.fillText(label, getX(lx), getY(ly));
+        }
+
+        function drawBase() {
+            // Gambar area hijau (DP) di lapisan bawah
+            ctx.fillStyle = 'rgba(46, 204, 113, 0.4)'; ctx.beginPath();
+            ctx.moveTo(getX(0), getY(12)); ctx.lineTo(getX(16), getY(4)); ctx.lineTo(getX(0), getY(20)); ctx.fill();
+            ctx.fillStyle = '#27ae60'; ctx.font = 'bold 16px Arial'; ctx.fillText("DP", getX(4), getY(14));
+
+            // Gambar Garis dengan fungsi drawLine yang sama dengan Media 1
+            drawLine(20, 0, 0, 20, '#3498db', 'x + y = 20 (Kapasitas)', 9, 13);
+            drawLine(24, 0, 0, 12, '#e74c3c', 'x + 2y = 24 (Pendapatan)', 17, 5);
+        }
+
+        function drawPoint(x, y, label) {
+            ctx.fillStyle = '#8e44ad'; ctx.beginPath(); ctx.arc(getX(x), getY(y), 6, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.font = 'bold 16px Arial'; ctx.fillText(`${label} (${x},${y})`, getX(x) + 12, getY(y));
+        }
+
+        function render() {
+            drawGrid(); 
+            drawBase();
+            if (state.tA) drawPoint(0, 12, 'A');
+            if (state.tB) drawPoint(16, 4, 'B');
+            if (state.tC) drawPoint(0, 20, 'C');
+        }
+
+        function toggle(key, btn) { state[key] = !state[key]; btn.classList.toggle('active'); render(); }
+        window.onload = render;
+    </script>
+</body>
+</html>
